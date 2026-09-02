@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Controle de Gastos 🎮 Pixel Art</title>
+  <!-- NES.css CDN -->
+  <link href="https://unpkg.com/nes.css@2.3.0/css/nes.min.css" rel="stylesheet" />
+  <!-- Google Fonts - Press Start 2P -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app" class="nes-container is-dark with-title">
+    <p class="title">🎮 Controle de Gastos</p>
+
+    <!-- Header Actions (Import / Export / New) -->
+    <header class="app-header">
+      <div class="device-actions">
+        <label class="nes-btn is-primary btn-sm">
+          📥 Importar
+          <input type="file" id="import-file" accept=".json" style="display: none;">
+        </label>
+        <button type="button" class="nes-btn is-warning btn-sm" id="btn-export">📤 Exportar</button>
+      </div>
+      <button type="button" class="nes-btn is-success btn-sm" id="btn-open-add-modal">➕ Novo Gasto</button>
+    </header>
+
+    <!-- Expense Carousel / Detail Viewer -->
+    <main class="expense-viewer">
+      <div id="no-expenses-view" class="nes-container is-rounded is-dark empty-state">
+        <i class="nes-icon coin is-medium"></i>
+        <p>Nenhum gasto cadastrado!</p>
+        <p class="text-sub">Clique em ➕ Novo Gasto ou Importe um arquivo JSON.</p>
+      </div>
+
+      <div id="expense-card" class="nes-container with-title is-dark expense-card hidden">
+        <p id="card-title" class="title">Gasto #1</p>
+
+        <div class="card-body">
+          <div class="info-row">
+            <span class="label">Descrição:</span>
+            <span id="expense-description" class="value highlight">---</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Categoria:</span>
+            <span id="expense-category" class="value">---</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Vencimento:</span>
+            <span id="expense-due-date" class="value">---</span>
+          </div>
+
+          <div class="values-box nes-container is-rounded">
+            <div class="info-row">
+              <span>Total:</span>
+              <span id="expense-total" class="value text-error">R$ 0,00</span>
+            </div>
+            <div class="info-row">
+              <span>Pago:</span>
+              <span id="expense-paid" class="value text-success">R$ 0,00</span>
+            </div>
+            <div class="info-row">
+              <span>Falta Pagar:</span>
+              <span id="expense-remaining" class="value text-warning">R$ 0,00</span>
+            </div>
+          </div>
+
+          <!-- Progress Bar showing how much is left to pay -->
+          <div class="progress-section">
+            <div class="progress-label">
+              <span>Progresso do Pagamento:</span>
+              <span id="progress-percentage">0%</span>
+            </div>
+            <progress id="expense-progress" class="nes-progress is-success" value="0" max="100"></progress>
+          </div>
+
+          <!-- Payment Abatement / Adjustment Action -->
+          <div class="payment-action-box">
+            <div class="nes-field is-inline">
+              <input type="number" id="pay-amount-input" class="nes-input is-dark" placeholder="R$ Valor" step="0.01" min="0">
+              <button type="button" class="nes-btn is-primary" id="btn-pay-amount">Abater</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigation & Remove Controls -->
+        <div class="card-controls">
+          <button type="button" class="nes-btn is-normal" id="btn-prev-expense">◀ Voltar</button>
+          <span id="expense-counter" class="counter-badge">1 / 1</span>
+          <button type="button" class="nes-btn is-normal" id="btn-next-expense">Avançar ▶</button>
+        </div>
+
+        <div class="card-danger-zone">
+          <button type="button" class="nes-btn is-error btn-sm" id="btn-remove-expense">🗑️ Remover Gasto</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Modal for Adding Expense -->
+    <dialog class="nes-dialog is-dark is-rounded" id="add-modal">
+      <form method="dialog" id="add-expense-form">
+        <p class="title">➕ Adicionar Gasto</p>
+
+        <div class="nes-field">
+          <label for="input-description">Descrição</label>
+          <input type="text" id="input-description" class="nes-input is-dark" required placeholder="Ex: Aluguel, Cartão...">
+        </div>
+
+        <div class="nes-field">
+          <label for="input-category">Categoria</label>
+          <div class="nes-select is-dark">
+            <select id="input-category" required>
+              <option value="Moradia">🏠 Moradia</option>
+              <option value="Alimentação">🍔 Alimentação</option>
+              <option value="Transporte">🚗 Transporte</option>
+              <option value="Lazer">🎮 Lazer</option>
+              <option value="Saúde">💊 Saúde</option>
+              <option value="Outros">📦 Outros</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="nes-field">
+          <label for="input-total">Valor Total (R$)</label>
+          <input type="number" id="input-total" class="nes-input is-dark" step="0.01" min="0.01" required placeholder="0.00">
+        </div>
+
+        <div class="nes-field">
+          <label for="input-paid">Valor Já Pago (R$)</label>
+          <input type="number" id="input-paid" class="nes-input is-dark" step="0.01" min="0" value="0.00" placeholder="0.00">
+        </div>
+
+        <div class="nes-field">
+          <label for="input-due-date">Data de Vencimento</label>
+          <input type="date" id="input-due-date" class="nes-input is-dark">
+        </div>
+
+        <menu class="dialog-menu">
+          <button type="button" class="nes-btn" id="btn-cancel-add">Cancelar</button>
+          <button type="submit" class="nes-btn is-success">Salvar</button>
+        </menu>
+      </form>
+    </dialog>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
